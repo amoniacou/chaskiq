@@ -71,6 +71,7 @@ cypress/cypress-examples
 cypress/videos
 stats.json
 .DS_Store
+vendor/bundle
 app/javascript/old-src
 .envrc
 

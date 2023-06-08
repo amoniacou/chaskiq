@@ -4,20 +4,14 @@ x-app:
   &app
   build:
     context: .
-    dockerfile: ./Dockerfile.development
-    args:
-      RUBY_VERSION: '3.2.0'
-      PG_MAJOR: '14'
-      NODE_MAJOR: '16'
-      YARN_VERSION: '1.13.0'
-      BUNDLER_VERSION: '2.3.26'
+    dockerfile: ./Dockerfile
+    target: dev 
   environment:
     &env
     NODE_ENV: development
     RAILS_ENV: ${RAILS_ENV:-development}
     ANYCABLE_DEBUG: ${DEBUG:-0}
     ANYCABLE_RPC_HOST: 0.0.0.0:50051
-  image: chaskiq/chaskiq:1.1.0
   tmpfs:
     - /tmp
 
