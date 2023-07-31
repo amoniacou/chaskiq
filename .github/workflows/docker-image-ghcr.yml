@@ -30,13 +30,17 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Collect version and tags
+        run: |
+          source ./version.sh
+          echo "app_version=$APP_VERSION" >> $GITHUB_ENV
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ghcr.io/amoniacou/chaskiq
           tags: |
+            type=raw,value=${{ env.app_version }}
             type=ref,event=branch
             type=ref,event=pr
             type=sha
@@ -47,5 +51,9 @@ jobs:
           context: .
           provenance: false
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ env.app_version }}
