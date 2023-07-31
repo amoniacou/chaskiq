@@ -44,17 +44,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null \
   && echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
   && sed -i "s/$(lsb_release -cs) main/$(lsb_release -cs) main contrib non-free/" /etc/apt/sources.list.d/debian.sources \
-  && curl -sL https://deb.nodesource.com/setup_$NODE_MAJOR.x | bash - \
   && apt-get update \
   && apt-get upgrade --yes \
-  && apt-get install --no-install-recommends --yes ${BUILD_PACKAGES} \
-  ${DEV_PACKAGES} \
-  ${RUBY_PACKAGES} \
-  && mkdir -p ${APP_ROOT} ${APP_ROOT}/vendor/bundle ${APP_ROOT}/.config && adduser --system --gid 0 --uid 10001 --home ${APP_ROOT} appuser \
+  && apt-get install --no-install-recommends --yes ${RUBY_PACKAGES} \
+  && mkdir -p ${APP_ROOT} ${APP_ROOT}/vendor/bundle ${APP_ROOT}/.config ${APP_ROOT}/.bundle && adduser --system --gid 0 --uid 10001 --home ${APP_ROOT} appuser \
   && mkdir /tmp/bundle && chgrp -R 0 /tmp/bundle && chmod -R g=u /tmp/bundle \
-  && chgrp -R 0 ${APP_ROOT} && chmod -R g=u ${APP_ROOT} && chmod g=u /etc/passwd \
-  && gem update --system && gem install bundler:$BUNDLER_VERSION && apt-get clean \
-  && npm install -g yarn@$YARN_VERSION
+  && chgrp -R 0 ${APP_ROOT} && chmod -R g=u ${APP_ROOT} && chmod g=u /etc/passwd 
 
 # Set a user to run
 USER 10001
@@ -72,22 +67,39 @@ COPY --chown=10001:0 . .
 # BUILD FOR PROD
 FROM basic AS build-env
 ENV RAILS_ENV=production
-ENV BUNDLE_JOBS=4 BUNDLE_RETRY=3
+ENV BUNDLE_RETRY=3
+USER root
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  --mount=type=tmpfs,target=/var/log \
+  --mount=type=tmpfs,target=/tmp \
+  set -x \
+  && curl -sL https://deb.nodesource.com/setup_$NODE_MAJOR.x | bash - \
+  && apt-get update \
+  && apt-get upgrade --yes \
+  && apt-get install --no-install-recommends --yes ${BUILD_PACKAGES} ${DEV_PACKAGES} \
+  && gem update --system && gem install bundler:$BUNDLER_VERSION && apt-get clean \
+  && npm install -g yarn@$YARN_VERSION
 # Cache Gemfiles and rebuild of it
+USER 10001
 COPY --chown=10001:0 Gemfile Gemfile.lock ./
-RUN --mount=type=cache,id=chasiq-gem-cache,sharing=locked,target=$APP_ROOT/.cache/bundle,uid=10001 \
+RUN --mount=type=cache,id=chasiq-dot-cache,sharing=locked,target=$APP_ROOT/.cache,uid=10001 \
+  --mount=type=cache,id=bundle-cache,sharing=locked,target=$APP_ROOT/.bundle/cache,uid=10001 \
   set -x && bundle config --global frozen 1 \
   && bundle config set path /app/.cache/bundle \
   && bundle config set deployment "true" \
   && bundle config set without "test development" \
-  && bundle install --jobs $BUNDLE_JOBS --retry $BUNDLE_RETRY \
+  && bundle install --retry $BUNDLE_RETRY \
   # Remove unneeded files (cached *.gem, *.o, *.c)
   && rm -rf vendor/bundle && mkdir -p vendor \
   && cp -ar .cache/bundle vendor/ \
   && bundle config set path /app/vendor/bundle \
   && rm -rf vendor/bundle/ruby/*/cache \
   && find vendor/bundle/ruby/*/gems/ -name "*.c" -delete \
-  && find vendor/bundle/ruby/*/gems/ -name "*.o" -delete
+  && find vendor/bundle/ruby/*/gems/ -name "*.o" -delete \
+  && find vendor/bundle/ruby/*/gems/ -name "*.a" -exec strip '{}' \; \
+  && rm -rf vendor/bundle/ruby/*/gems/grpc-*/src/ruby/ext/grpc/objs
 # cache node.js packages
 COPY --chown=10001:0 package.json yarn.lock ./
 COPY --chown=10001:0 app/javascript/packages ./app/javascript/packages
@@ -103,14 +115,15 @@ RUN --mount=type=cache,id=-assets-cache,sharing=locked,target=/app/tmp/cache,uid
   NODE_OPTIONS="--max-old-space-size=2048" \
   SECRET_KEY_BASE=`bin/rake secret` \
   bundle exec rails assets:precompile --trace \
-  && rm -rf node_modules vendor/assets spec
+  && rm -rf node_modules vendor/assets spec app/assets/builds app/javascript \
+  && rm -rf vendor/bundle/ruby/*/gems/tailwindcss*/exe/*
 
 # PRODUCTION BUILD
 FROM basic AS production
 COPY --chown=10001:0 --from=build-env $APP_ROOT $APP_ROOT
-RUN bundle config set --local path './vendor/bundle' && bundle config set deployment "true" && bundle config set without "test development"
+RUN set -x && rm -rf ./.* && bundle config set --local path './vendor/bundle' && bundle config set deployment "true" && bundle config set without "test development"
 USER root
-RUN set -x && DEBIAN_FRONTEND=noninteractive apt-get purge --auto-remove --yes ${SYSTEM_PACKAGES} ${BUILD_PACKAGES} ${DEV_PACKAGES} lib*-dev && rm -rf /var/lib/apt/*
+RUN set -x && DEBIAN_FRONTEND=noninteractive apt-get purge --auto-remove --yes ${SYSTEM_PACKAGES} && rm -rf /var/lib/apt/* /var/cache/debconf
 USER 10001
 EXPOSE 3000
 CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
