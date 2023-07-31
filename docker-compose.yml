@@ -1,13 +1,11 @@
-version: '2.4'
+version: '3.5'
 
-x-app:
-  &app
+x-app: &app
   build:
     context: .
     dockerfile: ./Dockerfile
-    target: dev 
-  environment:
-    &env
+    target: dev
+  environment: &env
     NODE_ENV: development
     RAILS_ENV: ${RAILS_ENV:-development}
     ANYCABLE_DEBUG: ${DEBUG:-0}
@@ -15,8 +13,7 @@ x-app:
   tmpfs:
     - /tmp
 
-x-backend:
-  &backend
+x-backend: &backend
   <<: *app
   stdin_open: true
   tty: true

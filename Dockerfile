@@ -1,15 +1,15 @@
-ARG RUBY_VERSION=3.2.0
+ARG RUBY_VERSION=3.2.2
 ARG APP_ROOT=/app
 ARG PG_MAJOR=14
-ARG NODE_MAJOR=16
-ARG BUNDLER_VERSION=2.3.26
+ARG NODE_MAJOR=18
+ARG BUNDLER_VERSION=2.4.17
 ARG YARN_VERSION=1.22.4
 ARG SYSTEM_PACKAGES="curl gnupg lsb-release"
 ARG BUILD_PACKAGES="build-essential libpq-dev libxml2-dev libxslt1-dev libc6-dev shared-mime-info zlib1g-dev nodejs"
 ARG DEV_PACKAGES="git unzip"
 ARG RUBY_PACKAGES="tzdata postgresql-client-$PG_MAJOR libjemalloc2 libyaml-0-2"
 
-FROM ruby:$RUBY_VERSION-slim-bullseye AS basic
+FROM ruby:$RUBY_VERSION-slim-bookworm AS basic
 ARG APP_ROOT
 ARG BUILD_PACKAGES
 ARG DEV_PACKAGES
@@ -43,8 +43,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   set -x && apt-get update && apt-get install --no-install-recommends --yes ${SYSTEM_PACKAGES} \
   && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null \
   && echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
-  && sed -i "s/$(lsb_release -cs) main/$(lsb_release -cs) main contrib non-free/" /etc/apt/sources.list \
-  && echo "deb http://http.debian.net/debian $(lsb_release -cs)-backports main contrib non-free" >> /etc/apt/sources.list \
+  && sed -i "s/$(lsb_release -cs) main/$(lsb_release -cs) main contrib non-free/" /etc/apt/sources.list.d/debian.sources \
   && curl -sL https://deb.nodesource.com/setup_$NODE_MAJOR.x | bash - \
   && apt-get update \
   && apt-get upgrade --yes \
@@ -86,7 +85,7 @@ RUN --mount=type=cache,id=chasiq-gem-cache,sharing=locked,target=$APP_ROOT/.cach
   && rm -rf vendor/bundle && mkdir -p vendor \
   && cp -ar .cache/bundle vendor/ \
   && bundle config set path /app/vendor/bundle \
-  && rm -rf vendor/bundle/ruby/*/cache/*.gem \
+  && rm -rf vendor/bundle/ruby/*/cache \
   && find vendor/bundle/ruby/*/gems/ -name "*.c" -delete \
   && find vendor/bundle/ruby/*/gems/ -name "*.o" -delete
 # cache node.js packages
