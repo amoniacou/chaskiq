@@ -127,8 +127,6 @@ gem "globalize", github: "globalize/globalize"
 
 # To use Stripe, also include:
 gem "stripe", "~> 6.0"
-# Reduces boot times through caching; required in config/boot.rb
-gem "bootsnap", ">= 1.1.0", require: false
 
 gem "dotenv-rails", groups: %i[development test]
 
@@ -146,8 +144,6 @@ group :development do
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
   gem "listen", ">= 3.0.5", "< 3.2"
   gem "web-console", ">= 3.3.0"
-  # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
-  gem "spring"
 end
 
 group :test do

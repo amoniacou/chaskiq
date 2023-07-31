@@ -29,11 +29,10 @@ Rails.application.configure do
 
   # Do not fallback to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
-  config.assets.enabled = false if ENV['ANYCABLE_DEPLOYMENT']
-  config.action_controller.asset_host = Chaskiq::Config.fetch('ASSET_HOST', Chaskiq::Config.get("HOST") )
+  config.assets.enabled = false if ENV["ANYCABLE_DEPLOYMENT"]
+  config.action_controller.asset_host = Chaskiq::Config.fetch("ASSET_HOST", Chaskiq::Config.get("HOST"))
 
-
-  config.action_controller.asset_host = Chaskiq::Config.fetch('ASSET_HOST', Chaskiq::Config.get("HOST") )
+  config.action_controller.asset_host = Chaskiq::Config.fetch("ASSET_HOST", Chaskiq::Config.get("HOST"))
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
@@ -42,16 +41,15 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = ENV.fetch('ACTIVE_STORAGE_SERVICE', 'amazon').to_sym
+  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "amazon").to_sym
 
-  Rails.application.routes.default_url_options = { host: Chaskiq::Config.get('HOST') }
-  config.action_controller.default_url_options = { host: Chaskiq::Config.get('HOST') }
-  config.action_mailer.default_url_options = { host: Chaskiq::Config.get('HOST') }
-
+  Rails.application.routes.default_url_options = { host: Chaskiq::Config.get("HOST") }
+  config.action_controller.default_url_options = { host: Chaskiq::Config.get("HOST") }
+  config.action_mailer.default_url_options = { host: Chaskiq::Config.get("HOST") }
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
-  config.action_cable.url = ENV['WS'] # Rails.application.credentials.ws
+  config.action_cable.url = ENV.fetch("WS", nil) # Rails.application.credentials.ws
   # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
@@ -62,7 +60,7 @@ Rails.application.configure do
   config.log_level = :info
 
   # Prepend all log lines with the following tags.
-  config.log_tags = [ :request_id ]
+  config.log_tags = [:request_id]
 
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
@@ -86,48 +84,19 @@ Rails.application.configure do
   config.active_support.report_deprecations = false
 
   # Use default logging formatter so that PID and timestamp are not suppressed.
-  config.log_formatter = ::Logger::Formatter.new
+  config.log_formatter = Logger::Formatter.new
 
   # Use a different logger for distributed setups.
   # require "syslog/logger"
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new "app-name")
 
-  if ENV["RAILS_LOG_TO_STDOUT"].present?
-    logger           = ActiveSupport::Logger.new(STDOUT)
-    logger.formatter = config.log_formatter
-    config.logger    = ActiveSupport::TaggedLogging.new(logger)
-  end
+  logger           = ActiveSupport::Logger.new(STDOUT)
+  logger.formatter = config.log_formatter
+  config.logger    = ActiveSupport::TaggedLogging.new(logger)
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 
-
-  # config.active_record.dump_schema_after_migration = false
-  delivery_method = ENV.fetch('SMTP_DELIVERY_METHOD', 'ses')
-
-  if delivery_method.downcase == 'smtp'
-    config.action_mailer.delivery_method = :smtp
-    config.action_mailer.smtp_settings = {
-      address: ENV['SMTP_ADDRESS'],
-      user_name: ENV['SMTP_USERNAME'], # Your SMTP user here.
-      password: ENV['SMTP_PASSWORD'], # Your SMTP password here.
-      authentication: :login,
-      enable_starttls_auto: true
-    }
-  else
-    zone = ENV['AWS_S3_REGION']
-
-    creds = Aws::Credentials.new(
-      ENV['AWS_ACCESS_KEY_ID'],
-      ENV['AWS_SECRET_ACCESS_KEY']
-    )
-
-    Aws::Rails.add_action_mailer_delivery_method(
-      :ses,
-      credentials: creds,
-      region: zone
-    )
-
-    config.action_mailer.delivery_method = :ses
-  end
+  # we will use default client setting from kubernetes
+  config.action_mailer.delivery_method = :ses
 end

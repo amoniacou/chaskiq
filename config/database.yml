@@ -50,16 +50,9 @@ staging:
   url: <%= Chaskiq::Config.get('DATABASE_URL') %>
 
 production:
-  <<: *default
-  database: <%= ENV.fetch('POSTGRES_DATABASE', 'chaskiq_production') %>
-  username: <%= ENV.fetch('POSTGRES_USERNAME', 'chaskiq_prod') %>
-  password: <%= ENV.fetch('POSTGRES_PASSWORD', 'chaskiq_prod') %>
-  prepared_statements: false
   adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 15 } %>
+  url: <%= ENV['DATABASE_URL'] %>
+  prepared_statements: false
   min_messages: warning
-  host_names:
-    ### Don't include the port number here. Change the "port" site setting instead, at /admin/site_settings.
-    ### If you change this setting you will need to
-    ###   - restart sidekiq if you change this setting
-    ###   - rebake all to posts using: `RAILS_ENV=production bundle exec rake posts:rebake`
-    - "localhost"

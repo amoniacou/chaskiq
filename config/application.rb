@@ -6,22 +6,20 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-require 'URLcrypt'
-require_relative 'middleware/maintenance_mode'
+require "URLcrypt"
+require_relative "middleware/maintenance_mode"
 
 Dotenv::Railtie.load if defined?(Dotenv::Railtie)
 
 module Chaskiq
-
   module Config
-
     def self.get(name)
       # config[name] || ENV[name.upcase]
       Rails.application.credentials.config.fetch(
-        name.downcase.to_sym, ENV[name.to_s.upcase]
+        name.downcase.to_sym, ENV.fetch(name.to_s.upcase, nil)
       )
     end
-  
+
     def self.fetch(name, fallback)
       Rails.application.credentials.config.fetch(
         name.downcase.to_sym, ENV.fetch(name.to_s.upcase, fallback)
@@ -30,10 +28,9 @@ module Chaskiq
     end
   end
 
-
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.1
+    config.load_defaults 7.0
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -43,10 +40,7 @@ module Chaskiq
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
-
-    config.load_defaults '6.0'
-    
-    config.encoding = 'utf-8'
+    config.encoding = "utf-8"
 
     config.assets.css_compressor = nil
 
@@ -75,18 +69,15 @@ module Chaskiq
       end
     end
 
-    if Chaskiq::Config::get("MAINTENANCE_MODE") == "true"
-      config.middleware.insert_before Rack::Sendfile, Middleware::MaintenanceMode
-    end
+    config.middleware.insert_before Rack::Sendfile, Middleware::MaintenanceMode if Chaskiq::Config.get("MAINTENANCE_MODE") == "true"
 
-    URLcrypt.key = [Chaskiq::Config.get('SECRET_KEY_BASE')].pack('H*')
+    URLcrypt.key = [Chaskiq::Config.get("SECRET_KEY_BASE")].pack("H*")
 
     locales = %w[af sq ar eu bg be ca hr cs da nl en eo et fo fi fr gl de el iw hu is ga it ja ko lv lt mk mt no pl pt ro ru gd sr sr sk sl es sv tr uk zh-CN]
     config.available_locales = locales
     I18n.available_locales = locales
     config.i18n.default_locale = :en
 
-    config.action_dispatch.tld_length = Chaskiq::Config.fetch('TLD_LENGTH', 1)&.to_i
-
+    config.action_dispatch.tld_length = Chaskiq::Config.fetch("TLD_LENGTH", 1)&.to_i
   end
 end
