@@ -123,7 +123,7 @@ FROM basic AS production
 COPY --chown=10001:0 --from=build-env $APP_ROOT $APP_ROOT
 RUN set -x && rm -rf ./.* && bundle config set --local path './vendor/bundle' && bundle config set deployment "true" && bundle config set without "test development"
 USER root
-RUN set -x && DEBIAN_FRONTEND=noninteractive apt-get purge --auto-remove --yes ${SYSTEM_PACKAGES} && rm -rf /var/lib/apt/* /var/cache/debconf
+RUN set -x && DEBIAN_FRONTEND=noninteractive apt-get purge --auto-remove --yes ${SYSTEM_PACKAGES} && rm -rf /usr/include/* /var/lib/apt/* /var/cache/debconf
 USER 10001
 EXPOSE 3000
 CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
