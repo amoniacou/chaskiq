@@ -50,14 +50,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   && apt-get install --no-install-recommends --yes ${BUILD_PACKAGES} \
   ${DEV_PACKAGES} \
   ${RUBY_PACKAGES} \
-  && mkdir -p ${APP_ROOT} ${APP_ROOT}/vendor/bundle ${APP_ROOT}/.config && adduser --system --gid 0 --uid 1001 --home ${APP_ROOT} appuser \
+  && mkdir -p ${APP_ROOT} ${APP_ROOT}/vendor/bundle ${APP_ROOT}/.config && adduser --system --gid 0 --uid 10001 --home ${APP_ROOT} appuser \
   && mkdir /tmp/bundle && chgrp -R 0 /tmp/bundle && chmod -R g=u /tmp/bundle \
   && chgrp -R 0 ${APP_ROOT} && chmod -R g=u ${APP_ROOT} && chmod g=u /etc/passwd \
   && gem update --system && gem install bundler:$BUNDLER_VERSION && apt-get clean \
   && npm install -g yarn@$YARN_VERSION
 
 # Set a user to run
-USER 1001
+USER 10001
 ENTRYPOINT ["/docker-entrypoint.sh"]
 # set working folder
 WORKDIR $APP_ROOT
@@ -66,16 +66,16 @@ FROM basic AS dev
 ENV RAILS_ENV=development
 ENV BUNDLE_PATH /app/vendor/bundle
 EXPOSE 3000
-USER 1001
-COPY --chown=1001:0 . .
+USER 10001
+COPY --chown=10001:0 . .
 
 # BUILD FOR PROD
 FROM basic AS build-env
 ENV RAILS_ENV=production
 ENV BUNDLE_JOBS=4 BUNDLE_RETRY=3
 # Cache Gemfiles and rebuild of it
-COPY --chown=1001:0 Gemfile Gemfile.lock ./
-RUN --mount=type=cache,id=chasiq-gem-cache,sharing=locked,target=$APP_ROOT/.cache/bundle,uid=1001 \
+COPY --chown=10001:0 Gemfile Gemfile.lock ./
+RUN --mount=type=cache,id=chasiq-gem-cache,sharing=locked,target=$APP_ROOT/.cache/bundle,uid=10001 \
   set -x && bundle config --global frozen 1 \
   && bundle config set path /app/.cache/bundle \
   && bundle config set deployment "true" \
@@ -89,16 +89,16 @@ RUN --mount=type=cache,id=chasiq-gem-cache,sharing=locked,target=$APP_ROOT/.cach
   && find vendor/bundle/ruby/*/gems/ -name "*.c" -delete \
   && find vendor/bundle/ruby/*/gems/ -name "*.o" -delete
 # cache node.js packages
-COPY --chown=1001:0 package.json yarn.lock ./
-COPY --chown=1001:0 app/javascript/packages ./app/javascript/packages
-RUN --mount=type=cache,id=-yarn-cache,sharing=locked,target=/app/.yarn,uid=1001 \
-  --mount=type=cache,id=-dot-cache,sharing=locked,target=/app/.cache,uid=1001 \
+COPY --chown=10001:0 package.json yarn.lock ./
+COPY --chown=10001:0 app/javascript/packages ./app/javascript/packages
+RUN --mount=type=cache,id=-yarn-cache,sharing=locked,target=/app/.yarn,uid=10001 \
+  --mount=type=cache,id=-dot-cache,sharing=locked,target=/app/.cache,uid=10001 \
   --mount=type=tmpfs,target=/tmp \
   set -x && yarn install --frozen-lockfile --non-interactive
-COPY --chown=1001:0 . .
+COPY --chown=10001:0 . .
 # compile assets
-RUN --mount=type=cache,id=-assets-cache,sharing=locked,target=/app/tmp/cache,uid=1001 \
-  --mount=type=cache,id=-dot-cache,sharing=locked,target=/app/.cache,uid=1001 \
+RUN --mount=type=cache,id=-assets-cache,sharing=locked,target=/app/tmp/cache,uid=10001 \
+  --mount=type=cache,id=-dot-cache,sharing=locked,target=/app/.cache,uid=10001 \
   --mount=type=tmpfs,target=/tmp \
   NODE_OPTIONS="--max-old-space-size=2048" \
   SECRET_KEY_BASE=`bin/rake secret` \
@@ -107,10 +107,10 @@ RUN --mount=type=cache,id=-assets-cache,sharing=locked,target=/app/tmp/cache,uid
 
 # PRODUCTION BUILD
 FROM basic AS production
-COPY --chown=1001:0 --from=build-env $APP_ROOT $APP_ROOT
+COPY --chown=10001:0 --from=build-env $APP_ROOT $APP_ROOT
 RUN bundle config set --local path './vendor/bundle' && bundle config set deployment "true" && bundle config set without "test development"
 USER root
 RUN set -x && DEBIAN_FRONTEND=noninteractive apt-get purge --auto-remove --yes ${SYSTEM_PACKAGES} ${BUILD_PACKAGES} ${DEV_PACKAGES} lib*-dev && rm -rf /var/lib/apt/*
-USER 1001
+USER 10001
 EXPOSE 3000
 CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
