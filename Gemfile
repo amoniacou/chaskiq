@@ -64,8 +64,7 @@ gem "ransack"
 
 gem "searchkick"
 
-# gem "elasticsearch", "7.12" # select one
-gem "opensearch-ruby" # select one
+gem "elasticsearch", "~> 8.9.0" # select one
 
 gem "browser", "~> 2.5"
 gem "geocoder", "~> 1.6"
