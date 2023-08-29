@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   && sed -i "s/$(lsb_release -cs) main/$(lsb_release -cs) main contrib non-free/" /etc/apt/sources.list.d/debian.sources \
   && apt-get update \
   && apt-get upgrade --yes \
-  && apt-get install --no-install-recommends --yes ${RUBY_PACKAGES} \
+  && apt-get install --no-install-recommends --yes ${RUBY_PACKAGES} ${DEV_PACKAGES} \
   && mkdir -p ${APP_ROOT} ${APP_ROOT}/vendor/bundle ${APP_ROOT}/.config ${APP_ROOT}/.bundle && adduser --system --gid 0 --uid 10001 --home ${APP_ROOT} appuser \
   && mkdir /tmp/bundle && chgrp -R 0 /tmp/bundle && chmod -R g=u /tmp/bundle \
   && chgrp -R 0 ${APP_ROOT} && chmod -R g=u ${APP_ROOT} && chmod g=u /etc/passwd 

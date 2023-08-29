@@ -38,6 +38,8 @@ module ApplicationCable
     def get_session_data
       params = request.query_parameters
 
+      return nil if app.blank?
+
       OriginValidator.new(
         app: app.domain_url,
         host: env["HTTP_ORIGIN"]
