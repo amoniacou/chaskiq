@@ -30,11 +30,24 @@ class OriginValidator
       host
     )
 
+    env_domain_without_subdomain = Addressable::URI.parse(without_subdomain(env_domain))
+
     app_domain = Addressable::URI.parse(domain)
 
     # for now we will check for domain
-    return false if app_domain.normalized_site != env_domain.normalized_site
+    if app_domain.normalized_site != env_domain.normalized_site ||
+      app_domain.normalized_site != env_domain_without_subdomain.normalized_site
+      return false
+    end
 
     true
+  end
+
+  def without_subdomain(env_domain)
+    subdomains = env_domain.host.split('.')
+    subdomains.shift
+    modified_url = "#{env_domain.scheme}://#{subdomains.join('.')}#{env_domain.path}"
+
+    modified_url
   end
 end
