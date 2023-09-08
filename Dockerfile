@@ -5,9 +5,9 @@ ARG NODE_MAJOR=18
 ARG BUNDLER_VERSION=2.4.17
 ARG YARN_VERSION=1.22.4
 ARG SYSTEM_PACKAGES="curl gnupg lsb-release"
-ARG BUILD_PACKAGES="build-essential libpq-dev libxml2-dev libxslt1-dev libc6-dev shared-mime-info zlib1g-dev nodejs"
+ARG BUILD_PACKAGES="build-essential libpq-dev libxml2-dev libxslt1-dev libvips-dev libc6-dev shared-mime-info zlib1g-dev nodejs"
 ARG DEV_PACKAGES="git unzip"
-ARG RUBY_PACKAGES="tzdata postgresql-client-$PG_MAJOR libjemalloc2 libyaml-0-2"
+ARG RUBY_PACKAGES="tzdata postgresql-client-$PG_MAJOR libjemalloc2 libyaml-0-2 libvips42"
 
 FROM ruby:$RUBY_VERSION-slim-bookworm AS basic
 ARG APP_ROOT
