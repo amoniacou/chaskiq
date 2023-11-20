@@ -431,6 +431,6 @@ class AppUser < ApplicationRecord
   end
 
   def should_index?
-    Chaskiq::Config.get("SEARCHKICK_ENABLED") == "true" && app.searchkick_enabled?
+    Chaskiq::Config.get("SEARCHKICK_ENABLED").present? && app.searchkick_enabled?
   end
 end

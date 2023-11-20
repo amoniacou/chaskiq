@@ -522,7 +522,7 @@ module Types
     end
 
     def contact_search(term:)
-      if Chaskiq::Config.get("SEARCHKICK_ENABLED") == "true" && object.searchkick_enabled?
+      if Chaskiq::Config.get("SEARCHKICK_ENABLED").present? && object.searchkick_enabled?
         AppUser.search(
           term,
           fields: %i[name last_name first_name email phone],

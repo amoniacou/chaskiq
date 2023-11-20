@@ -8,7 +8,7 @@ module Mutations
     end
 
     def app_users(app, per, page)
-      @app_users = if Chaskiq::Config.get("SEARCHKICK_ENABLED") == "true" && app.searchkick_enabled?
+      @app_users = if Chaskiq::Config.get("SEARCHKICK_ENABLED").present? && app.searchkick_enabled?
                      @segment.es_search(page, per).includes(taggings: :tag)
                    else
                      @segment.execute_query
