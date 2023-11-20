@@ -113,10 +113,8 @@ module Types
     def logo_large
       options = {
         resize_to_limit: [1280, 600],
-        gravity: "center",
         crop: [0, 0, 1280, 600],
-        strip: true,
-        quality: "86"
+        saver: { strip: true, quality: 86 }
       }
 
       return "" if object.logo_blob.blank?

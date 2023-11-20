@@ -43,9 +43,7 @@ module Types
     def header_image_large
       options = {
         resize_to_limit: [1280, 600],
-        gravity: "center",
-        strip: true,
-        quality: "86"
+        saver: { strip: true, quality: 86 }
       }
 
       return "" if object.header_image_blob.blank?

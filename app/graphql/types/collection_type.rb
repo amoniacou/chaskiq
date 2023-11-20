@@ -15,10 +15,7 @@ module Types
     def icon
       options = {
         resize_to_limit: [200, 200],
-        gravity: "center",
-        # crop: '200x200+0+0',
-        strip: true,
-        quality: "86"
+        saver: { strip: true, quality: 86 }
       }
 
       return "" if object.icon_blob.blank?
