@@ -114,7 +114,7 @@ module Types
       options = {
         resize_to_limit: [1280, 600],
         gravity: "center",
-        crop: "1280x600+0+0",
+        crop: [0, 0, 1280, 600],
         strip: true,
         quality: "86"
       }
