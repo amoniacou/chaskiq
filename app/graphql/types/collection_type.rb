@@ -14,7 +14,7 @@ module Types
     field :icon, String, null: true
     def icon
       options = {
-        resize: "200x200^",
+        resize_to_limit: [200, 200],
         gravity: "center",
         # crop: '200x200+0+0',
         strip: true,

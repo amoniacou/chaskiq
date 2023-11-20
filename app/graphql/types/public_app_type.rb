@@ -112,7 +112,7 @@ module Types
     field :logo_large, String, null: true
     def logo_large
       options = {
-        resize: "1280x600^",
+        resize_to_limit: [1280, 600],
         gravity: "center",
         crop: "1280x600+0+0",
         strip: true,
