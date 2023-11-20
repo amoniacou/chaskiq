@@ -21,14 +21,15 @@ class Article < ApplicationRecord
 
   include PgSearch::Model
   pg_search_scope :search,
-                  # against: [:title, :description]
+                  # against: %i[title description],
                   # ignoring: :accents,
                   # using: [:trigram],
                   using: {
-                    tsearch: { prefix: true }
+                    tsearch: { prefix: true, dictionary: "english" }
                   },
                   associated_against: {
-                    translations: %i[title description]
+                    translations: %i[title description],
+                    article_content: %i[html_content]
                   }
 
   has_one :article_content, dependent: :destroy_async
